@@ -3,17 +3,20 @@
 // the initial values are reset when initializePositions()
 // is called
 var GAMESTATE = 'START'; // 'PLAY', 'POINT', 'GAMEOVER'
+
 var score = {
   player1: 0,
-  player2: 0
+  player2: 0,
 }
+
 var ball = {
-  x: 2,
-  y: 2,
+  x: 0,
+  y: 0,
   xvelocity: 2,
   yvelocity: 2,
   size: 20
 }
+
 var paddle1 = {
   x: 100,
   y: 100,
@@ -24,15 +27,18 @@ var paddle2 = {
   x: 20,
   y: 20,
   width: 10,
-  length: 80
+  length: 80,
 }
+
 var gameoversound, pointsound, osc;
+
 var borders = {
   leftx: 0,
   rightx: 0,
   topy: 0,
   bottomy: 0
 }
+
 var keypress = {
   w: false, // up player 1 
   s: false, // down player 1
@@ -44,15 +50,13 @@ var keypress = {
 // the preload function is empty for now.  this is where you can load mp3 
 // sounds to play when the game state enters GAME OVER and POINT.  
 function preload() {
-  hit = loadSound('assets/hit.mp3');
-  ding = loadSound('assets/ding.mp3');
-  lose = loadSound('assets/sadtrombone.mp3');
-  
+  song = loadSound('Comedy effect backwards drip.wav');
+  pointsound = loadSound('Whistle1.wav');
+  gameoversound = loadSound('Fireworks, rocket whistle with explosion.wav');
 }
 
 function setup() {
   createCanvas(400, 400);
-  
   // i added some code here to initialize an oscillator!!!
   osc = new p5.Oscillator();
   osc.setType('sine');
@@ -116,11 +120,13 @@ function updateState() {
     // wait for spacebar
     if (keypress.spacebar == true) {
       GAMESTATE = 'PLAY';
-    }
+      ball.y=random(borders.topy,borders.bottomy);
+       }
   } else if (GAMESTATE == 'POINT') {
     initializePositions();
     if (keypress.spacebar == true) {
       GAMESTATE = 'PLAY';
+      ball.y=random(borders.topy,borders.bottomy);  
     }
   } else if (GAMESTATE == 'GAMEOVER') {
     if (keypress.spacebar == true) {
@@ -133,14 +139,14 @@ function updateState() {
 
     // move paddles.  you may want to modify this so that the paddles remain on the screen
     if (keypress.w == true) {
-      paddle1.y = constrain(paddle1.y, borders.topy, borders.bottomy - paddle1.length) - 6;
+      paddle1.y = paddle1.y - 3;
     } else if (keypress.s == true) {
-      paddle1.y = constrain(paddle1.y, borders.topy, borders.bottomy - paddle1.length) + 6;
+      paddle1.y = paddle1.y + 3;
     }
     if (keypress.o == true) {
-      paddle2.y = constrain(paddle2.y, borders.topy, borders.bottomy - paddle2.length) - 6;
+      paddle2.y = paddle2.y - 3;
     } else if (keypress.l == true) {
-      paddle2.y = constrain(paddle2.y, borders.topy, borders.bottomy - paddle2.length) + 6;
+      paddle2.y = paddle2.y + 3;
     }
 
     // check top/bottom boundaries and reverse yvelocity 
@@ -148,9 +154,11 @@ function updateState() {
     // hint: what does the "constrain()" function do.
     if (ball.y < borders.topy) {
       ball.yvelocity = -ball.yvelocity;
+      song.play();
     }
     if (ball.y > borders.bottomy) {
       ball.yvelocity = -ball.yvelocity;
+      song.play();
     }
 
     // this checks if the ball goes out of bounds on the left or right.
@@ -160,26 +168,28 @@ function updateState() {
     if (ball.x > borders.rightx) {
       if ((ball.y > paddle2.y) &&
         (ball.y < (paddle2.y + paddle2.length))) {
-          ball.xvelocity = -ball.xvelocity;
-        hit.play();
-        hit.setVolume(0,5);
-        } else {
-          score.player1 = score.player1 + 1; GAMESTATE = 'POINT';
-          ding.play();
-    			ding.setVolume(0.5);
+        ball.xvelocity = -ball.xvelocity;
+        song.play();
+      } else if (score.player1 >=2||score.player2 >=2) {
+        GAMESTATE = 'GAMEOVER';
+       } else {
+        score.player1 = score.player1 + 1;
+        GAMESTATE = 'POINT';
+        pointsound.play();
+        
       }
     }
     if (ball.x < borders.leftx) {
       if ((ball.y > paddle1.y) &&
         (ball.y < (paddle1.y + paddle1.length))) {
-          ball.xvelocity = -ball.xvelocity;
-        hit.play();
-        hit.setVolume(0,5);
-        } else {
-          score.player2 = score.player2 + 1; 
-          GAMESTATE = 'POINT';
-					ding.play();
-   			 	ding.setVolume(0.5);
+        ball.xvelocity = -ball.xvelocity;
+        song.play();
+      } else if (score.player1 >=2||score.player2 >=2) {
+        GAMESTATE = 'GAMEOVER';
+      }else {
+        score.player2 = score.player2 + 1;
+        GAMESTATE = 'POINT';
+        pointsound.play();
       }
     }
   }
@@ -201,12 +211,12 @@ function updateState() {
 // you may also want to change the logic here so the ball does not 
 // appear while you are waiting for the space bar to start the game play 
 function drawStuff() {
-  background(255);
+  background(200);
   // draw paddles
- fill(0);
-  
+  fill(250)
+
   push();
-  fill(0)
+  fill(160, 200, 105)
   rect(paddle1.x, paddle1.y, paddle1.width,
     paddle1.length);
   rect(paddle2.x, paddle2.y, paddle2.width,
@@ -223,37 +233,28 @@ function drawStuff() {
   noFill();
   strokeWeight(4);
   stroke(255);
-  rect(borders.leftx,borders.topy,
-       borders.rightx-borders.leftx,
-       borders.bottomy - borders.topy);
+  rect(borders.leftx, borders.topy,
+    borders.rightx - borders.leftx,
+    borders.bottomy - borders.topy);
   pop();
-  
+
   if (GAMESTATE == 'START') {
     // text press spacebar to play
     textAlign(CENTER);
-    text('Press SPACEBAR to start', width / 2, height / 2);
+    text('press SPACEBAR to start', width / 2, height / 2);
     // text instruction
-  } else if (GAMESTATE == 'PLAY') {
-    ellipse(ball.x, ball.y, ball.size);
-  } else if (GAMESTATE == 'POINT') {
+  } else if (GAMESTATE == 'PLAY') {} else if (GAMESTATE == 'POINT') {
     // play point sound
     textAlign(CENTER);
     text('press SPACEBAR to continue', width / 2, height / 2);
   } else if (GAMESTATE == 'GAMEOVER') {
     // play gamesound
     // text GAME OVER and WINNER!
-    
     textAlign(CENTER);
     text('GAMEOVER', width / 2, height / 2);
-    
-     if (player1.score >=3 || player2.score>=3) {
-		borders.x = 200;
-    borders.y = 200;
-    push();
-    textSize(50);
-    text('Game Over', 80,100);
-    pop();
-     }
+    gameoversound.play(); 
+
+
   }
 }
 
@@ -261,9 +262,9 @@ function drawStuff() {
 // should change this to randomize ball position and velocity each time so the game is more interesting!!
 function initializePositions() {
   ball.x = width / 2;
-  ball.y = height / 2;
-  ball.xvelocity = random(2, -2); // probably should randomize this somehow
-  ball.yvelocity = random(2, -2);
+  ball.y = height + 10;
+  ball.xvelocity = random(-2,2); // probably should randomize this somehow
+  ball.yvelocity = random(-2,2);
 
   borders.leftx = 50;
   borders.rightx = width - 50;
@@ -274,4 +275,4 @@ function initializePositions() {
   paddle1.y = height / 2;
   paddle2.x = borders.rightx;
   paddle2.y = height / 2;
-}
+}  
